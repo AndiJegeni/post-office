@@ -1,0 +1,246 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #1a1a1a;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+  }
+  
+  .letter-container {
+    position: relative;
+    width: 100%;
+    max-width: 430px;
+    height: 92vh;
+    background-color: #e8e8e8;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .letter-header {
+    background-color: #e8e8e8;
+    padding: 12px 0;
+    text-align: center;
+    border-bottom: 1px solid #d8d8d8;
+  }
+  
+  .letter-header h1 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  #drawingCanvas {
+    touch-action: none;
+    flex-grow: 1;
+    background-color: white;
+    width: 100%;
+  }
+  
+  .text-overlay {
+    position: absolute;
+    top: 50px;  /* Below header */
+    left: 0;
+    right: 0;
+    bottom: 80px; /* Above tools */
+    pointer-events: none;
+    overflow: hidden;
+  }
+  
+  .text-overlay.active {
+    pointer-events: auto;
+  }
+  
+  .text-item {
+    position: absolute;
+    background: transparent;
+    border: 1px dashed transparent;
+    min-width: 50px;
+    min-height: 24px;
+    padding: 4px;
+    font-size: 16px;
+    outline: none;
+    cursor: move;
+    pointer-events: auto;
+  }
+  
+  .text-item:focus {
+    border-color: #aaa;
+  }
+  
+  .emoji-item {
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
+  .tools-container {
+    position: absolute;
+    bottom: 16px;
+    left: 5%;
+    width: 90%;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .platform {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #e8e8e8;
+    border-radius: 12px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+  }
+  
+  .tools {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 10;
+  }
+  
+  .tool {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #f1f1f1;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+  }
+  
+  .tool:active {
+    transform: scale(0.95);
+  }
+  
+  .tool.selected {
+    background-color: #2074ff;
+    color: white;
+  }
+  
+  .tool-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .text-tool {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .emoji-tool {
+    font-size: 24px;
+  }
+  
+  .emoji-picker {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.95);
+    width: 80%;
+    background: white;
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    display: none;
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    z-index: 100;
+  }
+  
+  .emoji-picker.active {
+    display: block;
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  
+  .emoji-list {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+  
+  .emoji-item {
+    text-align: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+  
+  .emoji-item:active {
+    transform: scale(1.2);
+  }
+  
+  .photo-preview {
+    position: absolute;
+    border: 2px dashed #aaaaaa;
+    cursor: move;
+    resize: both;
+    overflow: hidden;
+    min-width: 100px;
+    min-height: 100px;
+  }
+  
+  .photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  
+  .photo-preview .delete-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 24px;
+    height: 24px;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  
+  #sendButton {
+    display: none;
+    position: absolute;
+    bottom: 85px;
+    right: 10px;
+    background-color: #2074ff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }

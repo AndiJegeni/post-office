@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Welcome</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #000;
+      touch-action: manipulation;
+    }
+    
+    .splash-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    .splash-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .tap-instruction {
+      position: absolute;
+      bottom: 40px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: white;
+      font-family: sans-serif;
+      font-size: 18px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+    
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="splash-container" id="splash-container">
+    <img src="assets/images/splash-image.jpg" alt="Welcome" class="splash-image">
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const splashContainer = document.getElementById('splash-container');
+      
+      // Function to handle the click/tap event
+      function handleTap() {
+        // Navigate to the envelope selection screen
+        window.location.href = 'envelopes.html';
+      }
+      
+      // Add event listeners for both click and touch
+      splashContainer.addEventListener('click', handleTap);
+      splashContainer.addEventListener('touchstart', function(e) {
+        // Prevent default behavior
+        e.preventDefault();
+      }, { passive: false });
+      
+      splashContainer.addEventListener('touchend', function(e) {
+        // Prevent default and then handle the tap
+        e.preventDefault();
+        handleTap();
+      }, { passive: false });
+      
+      // Prevent double-tap zoom
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(e) {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+    });
+  </script>
+</body>
+</html>
