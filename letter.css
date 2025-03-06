@@ -44,11 +44,43 @@ body {
     background-color: #EDEDED;
 }
 
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
 .letter-header h1 {
     font-size: 24px;
-    margin-bottom: 0px;
+    margin: 0;
     color: #333;
     font-family: 'Cooper BT', serif;
+}
+
+#shareButton {
+    display: block;
+    background-color: #2074ff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+#shareButton:hover {
+    background-color: #1860d6;
+}
+
+#shareButton:active {
+    transform: scale(0.98);
+    background-color: #1557c7;
 }
 
 .drawing-layer {
