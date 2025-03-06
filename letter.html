@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#f0f0f0">
+  <meta name="theme-color" content="#EDEDED">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Send a Letter</title>
+  <title>Write a Letter</title>
+  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="letter.css">
 </head>
 <body>
@@ -16,29 +17,47 @@
     
     <canvas id="drawingCanvas"></canvas>
     
-    <div class="text-overlay" id="textOverlay"></div>
+    <div class="text-overlay"></div>
     
     <div class="tools-container">
       <div class="platform"></div>
       <div class="tools">
-        <div class="tool selected" data-tool="pencil">
-          <img src="assets/icons/pencil.svg" alt="Pencil" class="tool-icon">
+        <!-- Pencil -->
+        <div class="tool pencil" data-tool="pencil">
+          <div class="pencil-tip-container">
+            <div class="pencil-wood"></div>
+            <div class="pencil-tip"></div>
+          </div>
+          <div class="pencil-body"></div>
         </div>
-        
-        <div class="tool" data-tool="text">
-          <span class="text-tool">T</span>
+
+        <!-- Text Icon -->
+        <div class="tool text-icon-wrapper" data-tool="text">
+          <div class="text-icon">
+            <span class="text-icon-letter">T</span>
+          </div>
         </div>
-        
-        <div class="tool" data-tool="emoji">
-          <span class="emoji-tool">😍</span>
+
+        <!-- Emoji -->
+        <div class="tool emoji-wrapper" data-tool="emoji">
+          <div class="emoji">😍</div>
         </div>
-        
-        <div class="tool" data-tool="photo">
-          <img src="assets/icons/photo.svg" alt="Photo" class="tool-icon">
+
+        <!-- Polaroid Photo -->
+        <div class="tool polaroid-wrapper" data-tool="photo">
+          <div class="polaroid-custom">
+            <div class="polaroid-inner"></div>
+          </div>
         </div>
-        
-        <div class="tool" data-tool="eraser">
-          <img src="assets/icons/eraser.svg" alt="Eraser" class="tool-icon">
+
+        <!-- Eraser -->
+        <div class="tool eraser-wrapper" data-tool="eraser">
+          <div class="eraser-container">
+            <div class="eraser">
+              <div class="eraser-body"></div>
+              <div class="eraser-cap"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -62,7 +81,10 @@
       </div>
     </div>
     
-    <button id="sendButton">Send</button>
+    <div class="button-container">
+      <button id="sendButton">Send</button>
+      <button id="shareButton">Share</button>
+    </div>
   </div>
   
   <script src="letter.js"></script>

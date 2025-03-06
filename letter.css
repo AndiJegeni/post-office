@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Cooper BT';
+  src: url('../fonts/cooperl.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,159 +14,374 @@
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
-  }
-  
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #1a1a1a;
+    font-family: 'Cooper BT', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+    background-color: #EDEDED;
     margin: 0;
     padding: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    touch-action: none;
-  }
-  
-  .letter-container {
+}
+
+.letter-container {
     position: relative;
     width: 100%;
-    max-width: 430px;
-    height: 92vh;
-    background-color: #e8e8e8;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    margin: 0 auto;
+    height: 85vh;
     display: flex;
     flex-direction: column;
-  }
-  
-  .letter-header {
-    background-color: #e8e8e8;
-    padding: 12px 0;
-    text-align: center;
-    border-bottom: 1px solid #d8d8d8;
-  }
-  
-  .letter-header h1 {
-    font-size: 18px;
-    font-weight: 500;
-    color: #333;
-  }
-  
-  #drawingCanvas {
-    touch-action: none;
-    flex-grow: 1;
     background-color: white;
-    width: 100%;
-  }
-  
-  .text-overlay {
-    position: absolute;
-    top: 50px;  /* Below header */
-    left: 0;
-    right: 0;
-    bottom: 80px; /* Above tools */
-    pointer-events: none;
+    margin-bottom: 100px;
     overflow: hidden;
-  }
-  
-  .text-overlay.active {
+}
+
+.letter-header {
+    padding: 16px 0;
+    text-align: center;
+    background-color: #EDEDED;
+}
+
+.letter-header h1 {
+    font-size: 24px;
+    margin-bottom: 0px;
+    color: #333;
+    font-family: 'Cooper BT', serif;
+}
+
+.drawing-layer {
+    position: absolute;
+    top: 50px;
+    left: 8px;
+    right: 8px;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.drawing-layer.active {
     pointer-events: auto;
-  }
-  
-  .text-item {
+}
+
+.pencil-layer {
+    z-index: 10;
+}
+
+.emoji-layer {
+    z-index: 10;
+}
+
+.photo-layer {
+    z-index: 10;
+}
+
+#drawingCanvas {
+    position: absolute;
+    top: 50px;
+    left: 8px;
+    right: 8px;
+    bottom: 0;
+    background-color: white;
+    z-index: 1;
+}
+
+.text-overlay {
+    position: absolute;
+    top: 50px;
+    left: 8px;
+    right: 8px;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.text-overlay.active {
+    pointer-events: auto;
+}
+
+.text-item, .emoji-item {
+    position: absolute;
+    -webkit-mask-image: radial-gradient(#000 0%, #000 100%);
+    mask-image: radial-gradient(#000 0%, #000 100%);
+}
+
+.text-item {
     position: absolute;
     background: transparent;
-    border: 1px dashed transparent;
     min-width: 50px;
     min-height: 24px;
     padding: 4px;
-    font-size: 16px;
-    outline: none;
-    cursor: move;
-    pointer-events: auto;
-  }
-  
-  .text-item:focus {
-    border-color: #aaa;
-  }
-  
-  .emoji-item {
+    font-family: 'Cooper BT', serif;
     font-size: 24px;
-    cursor: pointer;
-  }
-  
-  .tools-container {
-    position: absolute;
+    line-height: 1.4;
+    outline: none;
+    border: 1px dashed transparent;
+    cursor: text;
+    user-select: text;
+    -webkit-user-select: text;
+    white-space: nowrap;
+    color: black;
+}
+
+.text-item:focus {
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.emoji-item {
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    font-size: 24px;
+    z-index: 3;
+}
+
+.tools-container {
+    position: fixed;
     bottom: 16px;
-    left: 5%;
+    left: 50%;
+    transform: translateX(-50%);
     width: 90%;
-    height: 60px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .platform {
+    max-width: 32rem;
+    height: 4rem;
+    z-index: 1000;
+}
+
+.platform {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
-    background: #e8e8e8;
-    border-radius: 12px;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
-  }
-  
-  .tools {
+    height: 5rem;
+    background-color: white;
+    border-radius: 8px;
+}
+
+.tools {
     position: relative;
     width: 100%;
     height: 100%;
+    padding: 0 1.5rem;
     display: flex;
-    justify-content: space-around;
     align-items: center;
+    justify-content: space-between;
     z-index: 10;
-  }
-  
-  .tool {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
+    gap: 0.5rem;
+}
+
+.tool {
+    transition: transform 0.2s ease;
+}
+
+.tool:hover {
+    transform: translateY(-0.5rem);
+}
+
+.tool.selected {
+    transform: translateY(-1.5rem);
+}
+
+.pencil {
+    position: relative;
+    width: 32px;
+    height: 200px;
+    cursor: pointer;
+    transform-origin: bottom center;
+    z-index: 10;
+    transition: all 0.3s ease-in-out;
+}
+
+.pencil:hover {
+    transform: translateY(-0.5rem) rotate(6deg) scale(1.1);
+    filter: drop-shadow(0 25px 25px rgb(0 0 0 / 0.15));
+}
+
+.pencil-body {
+    position: absolute;
+    top: 32px;  /* Height of the tip */
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #2563eb 100%);
+    border-radius: 1px;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Pencil facets */
+.pencil-body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2px;
+    bottom: 0;
+    width: 2px;
+    background-color: #3b82f6;
+}
+
+.pencil-body::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 2px;
+    bottom: 0;
+    width: 2px;
+    background-color: #1d4ed8;
+}
+
+.pencil-tip-container {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 32px;
+    z-index: 10;
+}
+
+.pencil-wood {
+    width: 100%;
+    height: 100%;
+    background: #E5C4A5;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-top: none;
+    position: relative;
+}
+
+.pencil-tip {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #2563eb 100%);
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    transform: translateX(-50%);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.text-icon-wrapper {
+    position: relative;
+    transform: translateY(-0.70em) rotate(11deg);
+    cursor: pointer;
+}
+
+.text-icon {
+    width: 3rem;
+    height: 3rem;
+    background-color: #F1F1F1;
+    border-radius: 0.5rem;
+    border: 1px solid #D0D0D0;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.text-icon-letter {
+    font-size: 1.5rem;
+    font-family: 'Cooper BT', serif;
+    font-weight: bold;
+}
+
+.emoji-wrapper {
+    position: relative;
+    transform: translateY(-1rem);
     cursor: pointer;
-    background: #f1f1f1;
-    transition: transform 0.2s ease, background-color 0.2s ease;
-  }
-  
-  .tool:active {
-    transform: scale(0.95);
-  }
-  
-  .tool.selected {
-    background-color: #2074ff;
-    color: white;
-  }
-  
-  .tool-icon {
+}
+
+.emoji {
+    font-size: 2.25rem;
+    transform: rotate(3deg);
+}
+
+.polaroid-wrapper {
+    position: relative;
+    transform: translateY(-1rem);
+    cursor: pointer;
+}
+
+.polaroid-custom {
+    width: 5.5rem;
+    height: 7rem;
+    background-color: #F5F5F5;
+    transform: rotate(6deg);
+    position: relative;
+    padding: 0.5rem 0.5rem 1.5rem 0.5rem;
+}
+
+.polaroid-inner {
+    width: 100%;
+    height: 100%;
+    background-color: #DFDFDF;
+    position: relative;
+}
+
+.polaroid-inner::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(50%, -50%);
     width: 24px;
     height: 24px;
-  }
-  
-  .text-tool {
-    font-size: 24px;
-    font-weight: bold;
-  }
-  
-  .emoji-tool {
-    font-size: 24px;
-  }
-  
-  .emoji-picker {
+    background-image: url('../assets/icons/image-01.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    filter: invert(50%);
+    opacity: 1;
+}
+
+.eraser-wrapper {
+    position: relative;
+    transform: translateY(-1rem);
+    cursor: pointer;
+}
+
+.eraser-container {
+    width: 40px;
+    height: 120px;
+    position: relative;
+    transform: rotate(10deg);
+}
+
+.eraser {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Main blue body */
+.eraser-body {
+    position: absolute;
+    top: 15%;
+    left: 0;
+    width: 100%;
+    height: 85%;
+    background-color: #4287f5;
+    border-radius: 1px;
+}
+
+/* White cap at the top */
+.eraser-cap {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    width: 100%;
+    height: 15%;
+    background-color: white;
+    border-radius: 4px 4px 0 0;
+    border-bottom: 0px;
+}
+
+.eraser-text {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.6rem;
+    transform: rotate(90deg);
+}
+
+.emoji-picker {
     position: absolute;
     bottom: 80px;
     left: 50%;
@@ -172,55 +395,69 @@
     opacity: 0;
     transition: transform 0.2s ease, opacity 0.2s ease;
     z-index: 100;
-  }
-  
-  .emoji-picker.active {
+}
+
+.emoji-picker.active {
     display: block;
     opacity: 1;
     transform: translateX(-50%) scale(1);
-  }
-  
-  .emoji-list {
+}
+
+.emoji-list {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 10px;
-  }
-  
-  .emoji-item {
+}
+
+.emoji-item {
     text-align: center;
     font-size: 24px;
     cursor: pointer;
     transition: transform 0.1s ease;
-  }
-  
-  .emoji-item:active {
+}
+
+.emoji-item:active {
     transform: scale(1.2);
-  }
-  
-  .photo-preview {
+}
+
+.photo-preview {
     position: absolute;
-    border: 2px dashed #aaaaaa;
+    background: white;
     cursor: move;
-    resize: both;
     overflow: hidden;
-    min-width: 100px;
-    min-height: 100px;
-  }
-  
-  .photo-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  
-  .photo-preview .delete-btn {
+    min-width: 120px;
+    min-height: 120px;
+    padding: 8px 8px 24px 8px;
+    background-color: #F5F5F5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 3;
+}
+
+.photo-preview img {
+    width: 184px;  /* 200px - (8px padding * 2) */
+    height: 200px; /* 240px - (8px top padding + 24px bottom padding) */
+    object-fit: cover;
+    background-color: #DFDFDF;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.photo-preview.active {
+    pointer-events: auto;
+}
+
+.photo-preview .delete-btn {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    width: 24px;
-    height: 24px;
-    background: red;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: #ff4444;
     color: white;
+    border: none;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -228,13 +465,24 @@
     cursor: pointer;
     font-weight: bold;
     font-size: 14px;
-  }
-  
-  #sendButton {
-    display: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.photo-preview:hover .delete-btn {
+    opacity: 1;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
     position: absolute;
     bottom: 85px;
     right: 10px;
+}
+
+#sendButton, #shareButton {
+    display: block;
     background-color: #2074ff;
     color: white;
     border: none;
@@ -243,4 +491,65 @@
     font-size: 16px;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  }
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+#sendButton:hover, #shareButton:hover {
+    background-color: #1860d6;
+}
+
+#sendButton:active, #shareButton:active {
+    transform: scale(0.98);
+    background-color: #1557c7;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.cursor {
+    display: inline-block;
+    color: #333;
+    font-weight: normal;
+    margin-left: 1px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.eraser-mask {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    pointer-events: none;
+    mix-blend-mode: destination-out;
+}
+
+/* Media Queries */
+@media only screen and (max-width: 600px) {
+    .tools-container {
+        bottom: 1rem;
+        max-width: 42rem;
+    }
+    
+    .tools {
+        padding: 0 1.5rem;
+        gap: 0;
+    }
+    
+    .pencil {
+        height: 160px;
+    }
+    
+    .polaroid-custom {
+        width: 4rem;
+        height: 5.5rem;
+    }
+    
+    .eraser-container {
+        width: 30px;
+        height: 90px;
+    }
+}

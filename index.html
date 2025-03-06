@@ -31,6 +31,20 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: none;
+    }
+
+    .splash-image.desktop {
+      display: block;
+    }
+    
+    @media (max-width: 768px) {
+      .splash-image.mobile {
+        display: block;
+      }
+      .splash-image.desktop {
+        display: none;
+      }
     }
     
     .tap-instruction {
@@ -62,7 +76,8 @@
 </head>
 <body>
   <div class="splash-container" id="splash-container">
-    <img src="assets/images/splash-image.jpg" alt="Welcome" class="splash-image">
+    <img src="assets/images/main.png" alt="Welcome" class="splash-image desktop">
+    <img src="assets/images/splash-image.jpg" alt="Welcome" class="splash-image mobile">
   </div>
 
   <script>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#f0f0f0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Envelope Selection</title>
+  <title>Select Envelope</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,77 +15,8 @@
     <!-- Envelopes will be inserted here via JavaScript -->
   </div>
   
-  <button id="next-button">Next</button>
+  <button id="next-button" disabled>Next</button>
 
   <script src="script.js"></script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#f0f0f0">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Send a Letter</title>
-  <link rel="stylesheet" href="letter.css">
-</head>
-<body>
-  <div class="letter-container">
-    <div class="letter-header">
-      <h1>Send a letter</h1>
-    </div>
-    
-    <canvas id="drawingCanvas"></canvas>
-    
-    <div class="text-overlay" id="textOverlay"></div>
-    
-    <div class="tools-container">
-      <div class="platform"></div>
-      <div class="tools">
-        <div class="tool selected" data-tool="pencil">
-          <img src="https://cdn.glitch.global/b7198d5b-3627-4b75-a7f4-946e5de7b7f6/pencil.svg?v=1740630501234" alt="Pencil" class="tool-icon">
-        </div>
-        
-        <div class="tool" data-tool="text">
-          <span class="text-tool">T</span>
-        </div>
-        
-        <div class="tool" data-tool="emoji">
-          <span class="emoji-tool">😍</span>
-        </div>
-        
-        <div class="tool" data-tool="photo">
-          <img src="https://cdn.glitch.global/b7198d5b-3627-4b75-a7f4-946e5de7b7f6/photo.svg?v=1740630502512" alt="Photo" class="tool-icon">
-        </div>
-        
-        <div class="tool" data-tool="eraser">
-          <img src="https://cdn.glitch.global/b7198d5b-3627-4b75-a7f4-946e5de7b7f6/eraser.svg?v=1740630503932" alt="Eraser" class="tool-icon">
-        </div>
-      </div>
-    </div>
-    
-    <input type="file" id="photoInput" accept="image/*" style="display: none;">
-    
-    <div class="emoji-picker" id="emojiPicker">
-      <div class="emoji-list">
-        <span class="emoji-item">😀</span>
-        <span class="emoji-item">😍</span>
-        <span class="emoji-item">🥰</span>
-        <span class="emoji-item">😂</span>
-        <span class="emoji-item">😎</span>
-        <span class="emoji-item">🤩</span>
-        <span class="emoji-item">😊</span>
-        <span class="emoji-item">👍</span>
-        <span class="emoji-item">🎉</span>
-        <span class="emoji-item">💕</span>
-        <span class="emoji-item">🌈</span>
-        <span class="emoji-item">🍕</span>
-      </div>
-    </div>
-    
-    <button id="sendButton">Send</button>
-  </div>
-  
-  <script src="letter.js"></script>
 </body>
 </html>

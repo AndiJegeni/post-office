@@ -12,363 +12,591 @@ document.addEventListener('DOMContentLoaded', function() {
     // Canvas setup
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
-    const textOverlay = document.getElementById('textOverlay');
+    const textOverlay = document.querySelector('.text-overlay');
     const toolButtons = document.querySelectorAll('.tool');
     const emojiPicker = document.getElementById('emojiPicker');
     const photoInput = document.getElementById('photoInput');
     
+    // Set initial variables
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let currentTool = 'pencil';
+    let currentZIndex = 10;
+    let lastTouchEnd = 0; // Track last touch time for preventing double-tap zoom
+    
     // Set canvas size
     function resizeCanvas() {
-      const letterContainer = document.querySelector('.letter-container');
-      const header = document.querySelector('.letter-header');
-      const tools = document.querySelector('.tools-container');
-      
-      const canvasHeight = letterContainer.offsetHeight - header.offsetHeight - tools.offsetHeight;
-      
-      canvas.width = letterContainer.offsetWidth;
-      canvas.height = canvasHeight;
-      
-      // Fill with white background
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const container = document.querySelector('.letter-container');
+        const headerHeight = document.querySelector('.letter-header').offsetHeight;
+        const containerWidth = container.offsetWidth - 16; // 8px margin on both sides
+        const containerHeight = container.offsetHeight - headerHeight;
+        
+        canvas.width = containerWidth;
+        canvas.height = containerHeight;
+        canvas.style.top = headerHeight + 'px';
     }
     
     // Initialize canvas
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
-    // Drawing state
-    let isDrawing = false;
-    let lastX = 0;
-    let lastY = 0;
-    let currentTool = 'pencil';
-    
-    // Sound effects
-    const drawSound = new Audio('assets/sounds/pencil.mp3');
-    drawSound.volume = 0.2;
-    
-    const eraserSound = new Audio('assets/sounds/eraser.mp3');
-    eraserSound.volume = 0.2;
-    
     // Tool handlers
     const tools = {
-      pencil: {
-        draw: function(x, y) {
-          if (!drawSound.paused && drawSound.currentTime > 0) {
-            // Sound already playing, don't restart
-          } else {
-            drawSound.play();
-          }
-          
-          ctx.beginPath();
-          ctx.moveTo(lastX, lastY);
-          ctx.lineTo(x, y);
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 2;
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          ctx.stroke();
+        pencil: {
+            draw: function(x, y) {
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+                
+                // Add texture effect
+                const angle = Math.atan2(y - lastY, x - lastX);
+                const perpendicular = angle + Math.PI/2;
+                
+                const dotCount = 8;
+                const spread = 2;
+                
+                for (let i = 0; i < dotCount; i++) {
+                    const t = Math.random();
+                    const dotX = lastX + (x - lastX) * t;
+                    const dotY = lastY + (y - lastY) * t;
+                    
+                    const offsetDistance = (Math.random() - 0.5) * spread;
+                    const offsetX = Math.cos(perpendicular) * offsetDistance;
+                    const offsetY = Math.sin(perpendicular) * offsetDistance;
+                    
+                    ctx.fillStyle = `rgba(37, 99, 235, ${0.1 + Math.random() * 0.2})`;
+                    ctx.fillRect(dotX + offsetX, dotY + offsetY, 1, 1);
+                }
+            }
+        },
+        eraser: {
+            draw: function(x, y) {
+                const eraserSize = 20;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(x, y, eraserSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        },
+        emoji: {
+            draw: function(x, y) {
+                const emojis = ['😀', '😍', '🥰', '😂', '😎', '🤩', '😊', '👍', '🎉', '💕', '🌈', '🍕'];
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                
+                ctx.save();
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.globalAlpha = 1.0;  // Ensure full opacity
+                
+                const rotation = Math.random() * 360;
+                ctx.translate(x, y);
+                ctx.rotate(rotation * Math.PI / 180);
+                
+                ctx.fillStyle = 'black';  // Set to solid black for full opacity
+                ctx.fillText(emoji, 0, 0);
+                ctx.restore();
+            }
+        },
+        text: {
+            isTyping: false,
+            currentText: '',
+            x: 0,
+            y: 0,
+            cursorVisible: true,
+            draw: function(x, y) {
+                if (!this.isTyping) {
+                    this.isTyping = true;
+                    this.x = x;
+                    this.y = y;
+                    this.currentText = '';
+                    this.cursorVisible = true;
+                    
+                    // Start cursor blink
+                    this.blinkCursor();
+                    
+                    // Start listening for keyboard input
+                    document.addEventListener('keydown', this.handleKeyPress);
+                }
+            },
+            handleKeyPress: function(e) {
+                if (!tools.text.isTyping) return;
+                
+                if (e.key === 'Enter') {
+                    // Finish typing
+                    tools.text.finishTyping();
+                } else if (e.key === 'Backspace') {
+                    // Remove last character
+                    tools.text.currentText = tools.text.currentText.slice(0, -1);
+                    tools.text.redrawText();
+                } else if (e.key.length === 1) {
+                    // Add character
+                    tools.text.currentText += e.key;
+                    tools.text.redrawText();
+                }
+            },
+            redrawText: function() {
+                // Clear the area where text will be
+                const metrics = ctx.measureText(this.currentText);
+                const height = 24;
+                ctx.fillStyle = 'white';
+                ctx.fillRect(this.x - 2, this.y - height/2, metrics.width + 4, height);
+                
+                // Draw the text
+                ctx.font = '24px "Cooper BT"';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'black';
+                ctx.fillText(this.currentText, this.x, this.y);
+                
+                // Draw cursor if visible
+                if (this.cursorVisible) {
+                    this.drawCursor();
+                }
+            },
+            drawCursor: function() {
+                const metrics = ctx.measureText(this.currentText);
+                const cursorX = this.x + metrics.width;
+                
+                ctx.beginPath();
+                ctx.moveTo(cursorX, this.y - 12);
+                ctx.lineTo(cursorX, this.y + 12);
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            },
+            blinkCursor: function() {
+                if (!this.isTyping) return;
+                
+                this.cursorVisible = !this.cursorVisible;
+                this.redrawText();
+                
+                setTimeout(() => this.blinkCursor(), 500);
+            },
+            finishTyping: function() {
+                this.isTyping = false;
+                this.cursorVisible = false;
+                document.removeEventListener('keydown', this.handleKeyPress);
+                
+                // Clear the area one last time and redraw text without cursor
+                this.redrawText();
+            }
         }
-      },
-      eraser: {
-        draw: function(x, y) {
-          if (!eraserSound.paused && eraserSound.currentTime > 0) {
-            // Sound already playing, don't restart
-          } else {
-            eraserSound.play();
-          }
-          
-          const eraserSize = 20;
-          ctx.fillStyle = 'white';
-          ctx.beginPath();
-          ctx.arc(x, y, eraserSize / 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
     };
     
     // Drawing event handlers
-    function startDrawing(e) {
-      // Only draw with pencil or eraser
-      if (currentTool !== 'pencil' && currentTool !== 'eraser') return;
-      
-      isDrawing = true;
-      
-      // Get pointer position
-      const rect = canvas.getBoundingClientRect();
-      lastX = e.clientX - rect.left;
-      lastY = e.clientY - rect.top;
-      
-      // For touch events
-      if (e.touches && e.touches[0]) {
-        lastX = e.touches[0].clientX - rect.left;
-        lastY = e.touches[0].clientY - rect.top;
-      }
+    function drawStart(e) {
+        if (!['pencil', 'eraser', 'emoji', 'text'].includes(currentTool)) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        
+        const x = e.pageX - (rect.left + scrollX);
+        const y = e.pageY - (rect.top + scrollY);
+        
+        if (currentTool === 'text') {
+            // Finish any existing text input
+            if (tools.text.isTyping) {
+                tools.text.finishTyping();
+            }
+            tools.text.draw(x, y);
+        } else {
+            isDrawing = true;
+            lastX = x;
+            lastY = y;
+            
+            if (currentTool === 'emoji') {
+                tools.emoji.draw(x, y);
+            }
+        }
     }
     
-    function draw(e) {
-      if (!isDrawing) return;
-      if (currentTool !== 'pencil' && currentTool !== 'eraser') return;
-      
-      e.preventDefault();
-      
-      // Get current pointer position
-      const rect = canvas.getBoundingClientRect();
-      let currentX = e.clientX - rect.left;
-      let currentY = e.clientY - rect.top;
-      
-      // For touch events
-      if (e.touches && e.touches[0]) {
-        currentX = e.touches[0].clientX - rect.left;
-        currentY = e.touches[0].clientY - rect.top;
-      }
-      
-      // Use the appropriate tool
-      tools[currentTool].draw(currentX, currentY);
-      
-      // Update last position
-      lastX = currentX;
-      lastY = currentY;
+    function drawEnd() {
+        isDrawing = false;
     }
     
-    function stopDrawing() {
-      isDrawing = false;
-      drawSound.pause();
-      drawSound.currentTime = 0;
-      eraserSound.pause();
-      eraserSound.currentTime = 0;
+    function drawMove(e) {
+        if (!isDrawing) return;
+        if (currentTool !== 'pencil' && currentTool !== 'eraser' && currentTool !== 'emoji') return;
+        
+        const rect = canvas.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        
+        const x = e.pageX - (rect.left + scrollX);
+        const y = e.pageY - (rect.top + scrollY);
+        
+        // Calculate distance moved
+        const dx = x - lastX;
+        const dy = y - lastY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // For emoji tool, only draw new emoji every 30 pixels
+        if (currentTool === 'emoji') {
+            if (distance > 10) {
+                tools.emoji.draw(e.clientX, e.clientY);
+                lastX = x;
+                lastY = y;
+            }
+        } else {
+            tools[currentTool].draw(x, y);
+            lastX = x;
+            lastY = y;
+        }
     }
     
-    // Add event listeners for drawing
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
+    // Add pointer events for drawing
+    canvas.addEventListener('pointerdown', drawStart);
+    canvas.addEventListener('pointerup', drawEnd);
+    canvas.addEventListener('pointerout', drawEnd);
+    canvas.addEventListener('pointermove', drawMove);
     
-    // Touch events
-    canvas.addEventListener('touchstart', function(e) {
-      e.preventDefault();
-      startDrawing(e);
-    }, { passive: false });
+    // Prevent touch scrolling on canvas
+    canvas.style.touchAction = 'none';
     
-    canvas.addEventListener('touchmove', function(e) {
-      e.preventDefault();
-      draw(e);
-    }, { passive: false });
-    
-    canvas.addEventListener('touchend', stopDrawing);
-    canvas.addEventListener('touchcancel', stopDrawing);
+    // Text functionality
+    function addTextBox(e) {
+        // Create a new text box
+        const textBox = document.createElement('div');
+        textBox.className = 'text-item';
+        textBox.contentEditable = true;
+        
+        // Set positioning and prevent cursor from changing
+        textBox.style.position = 'absolute';
+        
+        // Give it a higher z-index
+        currentZIndex += 1;
+        textBox.style.zIndex = currentZIndex.toString();
+        
+        // Position the text box
+        const rect = textOverlay.getBoundingClientRect();
+        textBox.style.left = (e.clientX - rect.left) + 'px';
+        textBox.style.top = (e.clientY - rect.top) + 'px';
+        
+        // Add the text box to the overlay
+        textOverlay.appendChild(textBox);
+        
+        // Focus the text box for immediate editing
+        setTimeout(() => {
+            textBox.focus();
+        }, 10);
+        
+        // Make it draggable but not when editing
+        textBox.addEventListener('mousedown', function(e) {
+            // If we're focused inside the text box, don't start dragging
+            if (document.activeElement === this) {
+                e.stopPropagation();
+            } else {
+                // Bring to front
+                currentZIndex += 1;
+                this.style.zIndex = currentZIndex.toString();
+            }
+        });
+        
+        // Make it draggable, but not when editing
+        makeElementDraggable(textBox, true);
+    }
     
     // Tool selection
     toolButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        const tool = this.dataset.tool;
-        
-        // Remove selected class from all tools
-        toolButtons.forEach(btn => btn.classList.remove('selected'));
-        
-        // Add selected class to clicked tool
-        this.classList.add('selected');
-        
-        // Set current tool
-        currentTool = tool;
-        
-        // Hide emoji picker when switching tools
-        emojiPicker.classList.remove('active');
-        
-        // Handle special tool actions
-        if (tool === 'text') {
-          addTextBox();
-        } else if (tool === 'emoji') {
-          toggleEmojiPicker();
-        } else if (tool === 'photo') {
-          photoInput.click();
-        }
-        
-        // Make text overlay active when using text tool
-        if (tool === 'text') {
-          textOverlay.classList.add('active');
-        } else {
-          textOverlay.classList.remove('active');
-        }
-      });
+        button.addEventListener('click', function() {
+            const tool = this.dataset.tool;
+            const previousTool = currentTool;
+            
+            // Remove selected class from all tools
+            toolButtons.forEach(btn => btn.classList.remove('selected'));
+            
+            // Add selected class to clicked tool
+            this.classList.add('selected');
+            
+            // Set current tool
+            currentTool = tool;
+            
+            // If switching away from text tool, finish any active typing
+            if (previousTool === 'text' && tools.text.isTyping) {
+                tools.text.finishTyping();
+            }
+            
+            // If switching away from photo tool, fix all photos in place
+            if (previousTool === 'photo') {
+                document.querySelectorAll('.photo-preview').forEach(photo => {
+                    photo.classList.remove('active');
+                });
+            }
+            
+            // If switching to photo tool, make all photos draggable again
+            if (tool === 'photo') {
+                document.querySelectorAll('.photo-preview').forEach(photo => {
+                    photo.classList.add('active');
+                });
+                photoInput.click();
+            }
+            
+            // Hide emoji picker when switching tools
+            emojiPicker.classList.remove('active');
+        });
     });
     
-    // Text functionality
-    function addTextBox() {
-      const textItem = document.createElement('div');
-      textItem.className = 'text-item';
-      textItem.contentEditable = true;
-      
-      // Random position in the middle area of canvas
-      const randomX = canvas.width * 0.3 + Math.random() * (canvas.width * 0.4);
-      const randomY = canvas.height * 0.3 + Math.random() * (canvas.height * 0.4);
-      
-      textItem.style.left = randomX + 'px';
-      textItem.style.top = randomY + 'px';
-      
-      textOverlay.appendChild(textItem);
-      
-      // Focus on the new text box
-      setTimeout(() => {
-        textItem.focus();
-      }, 10);
-      
-      // Make text draggable
-      makeElementDraggable(textItem);
-    }
-    
-    // Emoji functionality
+    // Emoji picker toggle
     function toggleEmojiPicker() {
-      emojiPicker.classList.toggle('active');
+        emojiPicker.classList.toggle('active');
     }
     
-    // Add emoji to canvas when clicked
-    document.querySelectorAll('.emoji-item').forEach(emoji => {
-      emoji.addEventListener('click', function() {
-        const emojiText = this.innerText;
-        
-        // Create emoji element
-        const emojiElement = document.createElement('div');
-        emojiElement.className = 'text-item';
-        emojiElement.innerText = emojiText;
-        emojiElement.style.fontSize = '32px';
-        
-        // Random position
-        const randomX = canvas.width * 0.3 + Math.random() * (canvas.width * 0.4);
-        const randomY = canvas.height * 0.3 + Math.random() * (canvas.height * 0.4);
-        
-        emojiElement.style.left = randomX + 'px';
-        emojiElement.style.top = randomY + 'px';
-        
-        textOverlay.appendChild(emojiElement);
-        
-        // Hide emoji picker
-        emojiPicker.classList.remove('active');
-        
-        // Make emoji draggable
-        makeElementDraggable(emojiElement);
-      });
+    // Set up emoji selection
+    document.querySelectorAll('.emoji-item').forEach(emojiItem => {
+        emojiItem.addEventListener('click', function() {
+            const emoji = this.innerText;
+            
+            // Draw emoji at center of canvas
+            const x = canvas.width / 2;
+            const y = canvas.height / 2;
+            
+            ctx.save();
+            ctx.font = '32px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(emoji, x, y);
+            ctx.restore();
+            
+            emojiPicker.classList.remove('active');
+        });
     });
     
     // Photo functionality
     photoInput.addEventListener('change', function(e) {
-      if (e.target.files && e.target.files[0]) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        
-        reader.onload = function(event) {
-          addPhotoToCanvas(event.target.result);
-        };
-        
-        reader.readAsDataURL(file);
-      }
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                addPhotoToCanvas(e.target.result);
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
     });
     
     function addPhotoToCanvas(imageSrc) {
-      // Create photo container
-      const photoContainer = document.createElement('div');
-      photoContainer.className = 'photo-preview';
-      
-      // Position in the center
-      photoContainer.style.left = (canvas.width / 2 - 100) + 'px';
-      photoContainer.style.top = (canvas.height / 2 - 100) + 'px';
-      photoContainer.style.width = '200px';
-      photoContainer.style.height = '200px';
-      
-      // Create image element
-      const img = document.createElement('img');
-      img.src = imageSrc;
-      photoContainer.appendChild(img);
-      
-      // Add delete button
-      const deleteBtn = document.createElement('div');
-      deleteBtn.className = 'delete-btn';
-      deleteBtn.innerText = '×';
-      deleteBtn.addEventListener('click', () => {
-        photoContainer.remove();
-      });
-      
-      photoContainer.appendChild(deleteBtn);
-      textOverlay.appendChild(photoContainer);
-      
-      // Make photo draggable
-      makeElementDraggable(photoContainer);
+        // Create photo container
+        const photoContainer = document.createElement('div');
+        photoContainer.className = 'photo-preview active';
+        
+        // Bring to front
+        currentZIndex += 1;
+        photoContainer.style.zIndex = currentZIndex.toString();
+        
+        // Position in the center
+        const photoWidth = 200;
+        const photoHeight = 240;
+        photoContainer.style.left = (canvas.width / 2 - photoWidth / 2) + 'px';
+        photoContainer.style.top = (canvas.height / 2 - photoHeight / 2) + 'px';
+        
+        // Create image element
+        const img = document.createElement('img');
+        img.src = imageSrc;
+        photoContainer.appendChild(img);
+        
+        // Add delete button
+        const deleteBtn = document.createElement('div');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerText = '×';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            photoContainer.remove();
+        });
+        
+        photoContainer.appendChild(deleteBtn);
+        textOverlay.appendChild(photoContainer);
+        
+        // Make photo draggable
+        makeElementDraggable(photoContainer);
     }
     
     // Make elements draggable
-    function makeElementDraggable(element) {
-      let offsetX, offsetY, isDragging = false;
-      
-      element.addEventListener('mousedown', startDrag);
-      element.addEventListener('touchstart', function(e) {
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousedown', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        startDrag(mouseEvent);
-      }, { passive: false });
-      
-      function startDrag(e) {
-        if (e.target.className === 'delete-btn') return;
+    function makeElementDraggable(element, isTextBox = false) {
+        let startX, startY;
+        let startLeft, startTop;
+        let isDragging = false;
         
-        // If it's a text element, don't start dragging if the user is trying to edit text
-        if (element.contentEditable === 'true' && e.target === element) {
-          // Only start dragging if the element is already focused
-          if (document.activeElement !== element) {
-            return;
-          }
+        element.addEventListener('mousedown', function(e) {
+            // Don't start dragging if clicking delete button
+            if (e.target.className === 'delete-btn') {
+                return;
+            }
+
+            // For photos, only allow dragging when active
+            if (!isTextBox && !element.classList.contains('active')) {
+                return;
+            }
+            
+            // For text boxes, don't start dragging if editing
+            if (isTextBox && document.activeElement === element) {
+                // Only allow dragging from edge of text box
+                const rect = element.getBoundingClientRect();
+                const isNearEdge = 
+                    e.clientX - rect.left < 10 || 
+                    rect.right - e.clientX < 10 || 
+                    e.clientY - rect.top < 10 || 
+                    rect.bottom - e.clientY < 10;
+                    
+                if (!isNearEdge) {
+                    return; // Allow editing when clicking in center
+                }
+            }
+            
+            // Bring to front
+            currentZIndex += 1;
+            element.style.zIndex = currentZIndex.toString();
+            
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = parseInt(element.style.left) || 0;
+            startTop = parseInt(element.style.top) || 0;
+            
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            
+            // Prevent default to avoid text selection during drag
+            e.preventDefault();
+        });
+        
+        // Split touch handling into two phases - initial touch without prevent default
+        // This lets us use passive: true for better performance
+        element.addEventListener('touchstart', function(e) {
+            // Don't start dragging if clicking delete button
+            if (e.target.className === 'delete-btn') {
+                return;
+            }
+            
+            // Bring to front
+            currentZIndex += 1;
+            element.style.zIndex = currentZIndex.toString();
+            
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            startLeft = parseInt(element.style.left) || 0;
+            startTop = parseInt(element.style.top) || 0;
+            
+            // We'll only start actual dragging on the first move
+            document.addEventListener('touchmove', handleFirstMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd);
+            
+        }, { passive: true }); // Mark as passive since we don't preventDefault here
+        
+        // Handle the first move event separately
+        function handleFirstMove(e) {
+            isDragging = true;
+            e.preventDefault(); // Prevent scrolling on the first move
+            
+            // Calculate the new position
+            const touch = e.touches[0];
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            
+            element.style.left = (startLeft + dx) + 'px';
+            element.style.top = (startTop + dy) + 'px';
+            
+            // Remove first move handler and add regular move handler
+            document.removeEventListener('touchmove', handleFirstMove);
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
         }
         
-        isDragging = true;
+        function handleMouseMove(e) {
+            if (!isDragging) return;
+            
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            element.style.left = (startLeft + dx) + 'px';
+            element.style.top = (startTop + dy) + 'px';
+        }
         
-        const rect = element.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
+        function handleTouchMove(e) {
+            if (!isDragging) return;
+            
+            // Calculate the new position
+            const touch = e.touches[0];
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            
+            element.style.left = (startLeft + dx) + 'px';
+            element.style.top = (startTop + dy) + 'px';
+            
+            // Prevent scrolling
+            e.preventDefault();
+        }
         
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', stopDrag);
+        function handleMouseUp() {
+            isDragging = false;
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        }
         
-        document.addEventListener('touchmove', function(e) {
-          const touch = e.touches[0];
-          const mouseEvent = new MouseEvent('mousemove', {
-            clientX: touch.clientX,
-            clientY: touch.clientY
-          });
-          drag(mouseEvent);
-        }, { passive: false });
-        
-        document.addEventListener('touchend', function() {
-          stopDrag();
-        });
-      }
-      
-      function drag(e) {
-        if (!isDragging) return;
-        
-        const x = e.clientX - offsetX;
-        const y = e.clientY - offsetY;
-        
-        // Keep the element within the canvas bounds
-        const maxX = textOverlay.offsetWidth - element.offsetWidth;
-        const maxY = textOverlay.offsetHeight - element.offsetHeight;
-        
-        element.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
-        element.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
-      }
-      
-      function stopDrag() {
-        isDragging = false;
-        document.removeEventListener('mousemove', drag);
-        document.removeEventListener('mouseup', stopDrag);
-      }
+        function handleTouchEnd() {
+            isDragging = false;
+            document.removeEventListener('touchmove', handleFirstMove);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+        }
     }
     
-    // Prevent default behavior for touch events
-    document.addEventListener('touchmove', function(e) {
-      if (e.target.tagName !== 'CANVAS' && !e.target.classList.contains('text-item') && !e.target.classList.contains('photo-preview')) {
-        e.preventDefault();
-      }
+    // Set up send button
+    const sendButton = document.getElementById('sendButton');
+    if (sendButton) {
+        sendButton.addEventListener('click', function() {
+            alert('Letter sent!');
+        });
+    }
+
+    // Set up share button
+    const shareButton = document.getElementById('shareButton');
+    if (shareButton) {
+        shareButton.addEventListener('click', async function() {
+            try {
+                // Convert canvas to blob
+                const canvasBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                
+                // Create file from blob
+                const file = new File([canvasBlob], 'my-letter.png', { type: 'image/png' });
+
+                // Check if Web Share API is available and supports files
+                if (navigator.share && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'My Letter',
+                        text: 'Check out my letter!'
+                    });
+                } else {
+                    // Fallback: Download the image
+                    const link = document.createElement('a');
+                    link.download = 'my-letter.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }
+            } catch (error) {
+                console.error('Error sharing:', error);
+                alert('Could not share the letter. Downloading instead...');
+                // Fallback to download
+                const link = document.createElement('a');
+                link.download = 'my-letter.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+        });
+    }
+
+    // Prevent double tap zoom on mobile
+    document.addEventListener('touchend', function(e) {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
     }, { passive: false });
-  });
+});

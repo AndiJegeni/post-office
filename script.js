@@ -34,7 +34,7 @@ const envelopes = [
     },
   ];
   
-  let selectedEnvelope = null; // Changed to null to indicate no initial selection
+  let selectedEnvelope = null;
   
   // Initialize the app when the DOM is fully loaded
   document.addEventListener('DOMContentLoaded', function() {
@@ -47,6 +47,8 @@ const envelopes = [
       console.error("Could not find envelope container!");
       return;
     }
+    
+    console.log("Found container:", container);
     
     // Disable next button initially
     if (nextButton) {
@@ -71,19 +73,31 @@ const envelopes = [
           </div>
         `;
         
-        envelopeEl.addEventListener('click', () => selectEnvelope(envelope.id));
+        // Add click handler
+        envelopeEl.onclick = function() {
+          console.log('Envelope clicked:', envelope.id);
+          selectEnvelope(envelope.id);
+        };
+        
         container.appendChild(envelopeEl);
+        console.log('Added envelope:', envelope.id);
       });
+      
+      console.log('Total envelopes created:', envelopes.length);
     }
     
     // Handle envelope selection
     function selectEnvelope(id) {
+      console.log('Selecting envelope:', id);
       selectedEnvelope = parseInt(id);
       
       // Update selected state for all envelopes
       document.querySelectorAll('.envelope').forEach(env => {
-        if (parseInt(env.dataset.id) === selectedEnvelope) {
+        const envId = parseInt(env.dataset.id);
+        console.log('Checking envelope:', envId, 'against selected:', selectedEnvelope);
+        if (envId === selectedEnvelope) {
           env.classList.add('selected');
+          console.log('Added selected class to envelope:', envId);
         } else {
           env.classList.remove('selected');
         }
@@ -92,6 +106,7 @@ const envelopes = [
       // Enable next button when an envelope is selected
       if (nextButton) {
         nextButton.disabled = false;
+        console.log('Next button enabled');
       }
     }
     
@@ -101,8 +116,11 @@ const envelopes = [
     // Add touch event handlers for mobile
     document.querySelectorAll('.envelope').forEach(env => {
       env.addEventListener('touchstart', function(e) {
+        console.log('Touch start on envelope:', env.dataset.id);
         // Prevent default touch behavior
         e.preventDefault();
+        // Trigger click on touch
+        selectEnvelope(env.dataset.id);
       }, { passive: false });
     });
     
@@ -119,12 +137,22 @@ const envelopes = [
     // Set up the Next button
     if (nextButton) {
       nextButton.addEventListener('click', function() {
+        console.log('Next button clicked');
         if (selectedEnvelope !== null) {
-          // Navigate to the letter page with the selected envelope as a parameter
+          console.log('Navigating to letter page with envelope:', selectedEnvelope);
           window.location.href = `letter.html?selectedEnvelope=${selectedEnvelope}`;
         }
       });
     } else {
       console.error("Could not find next button!");
     }
+    
+    // Add click handler to container as well (event delegation)
+    container.addEventListener('click', function(e) {
+      const envelope = e.target.closest('.envelope');
+      if (envelope) {
+        console.log('Envelope clicked through delegation:', envelope.dataset.id);
+        selectEnvelope(envelope.dataset.id);
+      }
+    });
   });
