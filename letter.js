@@ -16,28 +16,38 @@ document.addEventListener('DOMContentLoaded', function() {
         typing: new Audio('assets/sounds/Typing.mp3')
     };
 
-    // Configure sounds
-    sounds.pencil.volume = 0.3;
-    sounds.eraser.volume = 0.3;
-    sounds.typing.volume = 0.5;
+    // Configure sounds and preload them
+    Object.values(sounds).forEach(sound => {
+        sound.load(); // Preload the sound
+        sound.volume = 0.3; // Set default volume
+    });
+    sounds.typing.volume = 0.5; // Typing can be a bit louder
     
     // Function to play sound with optional loop
     function playSound(soundName, shouldLoop = false) {
         const sound = sounds[soundName];
         if (sound) {
-            sound.loop = shouldLoop;
-            sound.currentTime = 0;
-            sound.play().catch(e => console.log('Sound play prevented:', e));
+            if (sound.paused) { // Only start if not already playing
+                sound.loop = shouldLoop;
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log('Sound play prevented:', e));
+            }
         }
     }
 
     // Function to stop sound
     function stopSound(soundName) {
         const sound = sounds[soundName];
-        if (sound) {
+        if (sound && !sound.paused) {
             sound.pause();
             sound.currentTime = 0;
+            sound.loop = false;
         }
+    }
+
+    // Stop all sounds
+    function stopAllSounds() {
+        Object.keys(sounds).forEach(soundName => stopSound(soundName));
     }
 
     // Canvas setup
@@ -244,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tools.text.finishTyping();
             }
             tools.text.draw(x, y);
-            playSound('typing', true);
+            playSound('typing');
         } else {
             isDrawing = true;
             lastX = x;
@@ -252,15 +262,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (currentTool === 'emoji') {
                 tools.emoji.draw(x, y);
+            } else if (currentTool === 'pencil') {
+                playSound('pencil', true);
+            } else if (currentTool === 'eraser') {
+                playSound('eraser', true);
             }
         }
     }
     
     function drawEnd() {
-        isDrawing = false;
-        // Stop all drawing sounds
-        stopSound('pencil');
-        stopSound('eraser');
+        if (isDrawing) {
+            isDrawing = false;
+            stopAllSounds();
+        }
     }
     
     function drawMove(e) {
@@ -351,10 +365,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const tool = this.dataset.tool;
             const previousTool = currentTool;
             
-            // Stop any playing sounds when switching tools
-            stopSound('pencil');
-            stopSound('eraser');
-            stopSound('typing');
+            // Stop all sounds when switching tools
+            stopAllSounds();
 
             // Remove selected class from all tools
             toolButtons.forEach(btn => btn.classList.remove('selected'));
