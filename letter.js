@@ -9,6 +9,37 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    // Load sound effects
+    const sounds = {
+        pencil: new Audio('assets/sounds/Pencil.mp3'),
+        eraser: new Audio('assets/sounds/Eraser.mp3'),
+        typing: new Audio('assets/sounds/Typing.mp3')
+    };
+
+    // Configure sounds
+    sounds.pencil.volume = 0.3;
+    sounds.eraser.volume = 0.3;
+    sounds.typing.volume = 0.5;
+    
+    // Function to play sound with optional loop
+    function playSound(soundName, shouldLoop = false) {
+        const sound = sounds[soundName];
+        if (sound) {
+            sound.loop = shouldLoop;
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log('Sound play prevented:', e));
+        }
+    }
+
+    // Function to stop sound
+    function stopSound(soundName) {
+        const sound = sounds[soundName];
+        if (sound) {
+            sound.pause();
+            sound.currentTime = 0;
+        }
+    }
+
     // Canvas setup
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
@@ -45,6 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const tools = {
         pencil: {
             draw: function(x, y) {
+                if (!isDrawing) {
+                    playSound('pencil', true);
+                }
                 ctx.beginPath();
                 ctx.moveTo(lastX, lastY);
                 ctx.lineTo(x, y);
@@ -77,6 +111,9 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         eraser: {
             draw: function(x, y) {
+                if (!isDrawing) {
+                    playSound('eraser', true);
+                }
                 const eraserSize = 20;
                 ctx.fillStyle = 'white';
                 ctx.beginPath();
@@ -207,6 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tools.text.finishTyping();
             }
             tools.text.draw(x, y);
+            playSound('typing', true);
         } else {
             isDrawing = true;
             lastX = x;
@@ -220,6 +258,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function drawEnd() {
         isDrawing = false;
+        // Stop all drawing sounds
+        stopSound('pencil');
+        stopSound('eraser');
     }
     
     function drawMove(e) {
@@ -310,6 +351,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const tool = this.dataset.tool;
             const previousTool = currentTool;
             
+            // Stop any playing sounds when switching tools
+            stopSound('pencil');
+            stopSound('eraser');
+            stopSound('typing');
+
             // Remove selected class from all tools
             toolButtons.forEach(btn => btn.classList.remove('selected'));
             
