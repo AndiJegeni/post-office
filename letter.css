@@ -229,6 +229,11 @@ body {
     filter: drop-shadow(0 25px 25px rgb(0 0 0 / 0.15));
 }
 
+.pencil:active, #shareButton:active {
+    transform: scale(0.98);
+    background-color: #1557c7;
+}
+
 .pencil-body {
     position: absolute;
     top: 32px;  /* Height of the tip */
@@ -584,4 +589,50 @@ body {
         width: 30px;
         height: 90px;
     }
+}
+
+/* Crayon Styles */
+.crayon {
+    position: relative;
+    width: 37px;
+    height: 110px;
+    transform: rotate(8deg);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.crayon:hover {
+    transform: translateY(-0.5rem) rotate(12deg) scale(1.1);
+}
+
+.crayon.selected {
+    transform: translateY(-1.5rem) rotate(12deg);
+}
+
+.crayon-body {
+    position: absolute;
+    top: 15%;
+    left: 0;
+    width: 100%;
+    height: 85%;
+    background: linear-gradient(90deg, #F14D61 14%, #F588A3 32%, #F03757 55%, #C9213B 100%);
+    border-radius: 1px;
+}
+
+.crayon-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #C11626 9%, #F88597 36%, #C11626 62%, #6D0A13 99%);
+    opacity: 0.2;
+}
+
+.crayon-tip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 15%;
+    background: linear-gradient(90deg, #A91422 9%, #D77484 36%, #A61724 62%, #64070F 99%);
+    clip-path: polygon(0 100%, 100% 100%, 50% 0);
+    z-index: 10;
 }
