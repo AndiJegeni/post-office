@@ -100,47 +100,67 @@ document.addEventListener('DOMContentLoaded', function() {
     const tools = {
         pencil: {
             draw: function(x, y) {
-                if (isDrawing) {
-                    ctx.beginPath();
-                    ctx.moveTo(lastX, lastY);
-                    ctx.lineTo(x, y);
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 2;
-                    ctx.lineCap = 'round';
-                    ctx.stroke();
+                if (!isDrawing) {
+                    playSound('pencil', true);
+                }
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+                
+                // Add texture effect
+                const angle = Math.atan2(y - lastY, x - lastX);
+                const perpendicular = angle + Math.PI/2;
+                
+                const dotCount = 8;
+                const spread = 2;
+                
+                for (let i = 0; i < dotCount; i++) {
+                    const t = Math.random();
+                    const dotX = lastX + (x - lastX) * t;
+                    const dotY = lastY + (y - lastY) * t;
                     
-                    lastX = x;
-                    lastY = y;
+                    const offsetDistance = (Math.random() - 0.5) * spread;
+                    const offsetX = Math.cos(perpendicular) * offsetDistance;
+                    const offsetY = Math.sin(perpendicular) * offsetDistance;
+                    
+                    ctx.fillStyle = `rgba(37, 99, 235, ${0.1 + Math.random() * 0.2})`;
+                    ctx.fillRect(dotX + offsetX, dotY + offsetY, 1, 1);
                 }
             }
         },
         crayon: {
             draw: function(x, y) {
-                if (isDrawing) {
-                    const width = 8;
-                    ctx.strokeStyle = '#F14D61';
-                    ctx.lineWidth = width;
-                    ctx.lineCap = 'round';
+                if (!isDrawing) {
+                    playSound('pencil', true); // Use pencil sound for now
+                }
+                const width = 8;
+                ctx.strokeStyle = '#F14D61';
+                ctx.lineWidth = width;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                // Add crayon texture effect
+                for (let i = 0; i < 3; i++) {
+                    const offsetX = (Math.random() - 0.5) * 2;
+                    const offsetY = (Math.random() - 0.5) * 2;
+                    
+                    ctx.strokeStyle = `rgba(241, 77, 97, ${0.3 + Math.random() * 0.4})`;
+                    ctx.lineWidth = width - (Math.random() * 3);
                     
                     ctx.beginPath();
-                    ctx.moveTo(lastX, lastY);
-                    ctx.lineTo(x, y);
-                    
-                    for (let i = 0; i < 3; i++) {
-                        const offsetX = (Math.random() - 0.5) * 2;
-                        const offsetY = (Math.random() - 0.5) * 2;
-                        
-                        ctx.strokeStyle = `rgba(241, 77, 97, ${0.3 + Math.random() * 0.4})`;
-                        ctx.lineWidth = width - (Math.random() * 3);
-                        
-                        ctx.beginPath();
-                        ctx.moveTo(lastX + offsetX, lastY + offsetY);
-                        ctx.lineTo(x + offsetX, y + offsetY);
-                        ctx.stroke();
-                    }
-                    
-                    lastX = x;
-                    lastY = y;
+                    ctx.moveTo(lastX + offsetX, lastY + offsetY);
+                    ctx.lineTo(x + offsetX, y + offsetY);
+                    ctx.stroke();
                 }
             }
         },
@@ -304,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function drawMove(e) {
         if (!isDrawing) return;
-        if (currentTool !== 'pencil' && currentTool !== 'eraser' && currentTool !== 'emoji') return;
+        if (currentTool !== 'pencil' && currentTool !== 'eraser' && currentTool !== 'emoji' && currentTool !== 'crayon') return;
         
         const rect = canvas.getBoundingClientRect();
         const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
