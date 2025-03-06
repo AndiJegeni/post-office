@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // For emoji tool, only draw new emoji every 30 pixels
         if (currentTool === 'emoji') {
             if (distance > 10) {
-                tools.emoji.draw(e.clientX, e.clientY);
+                tools.emoji.draw(x, y);
                 lastX = x;
                 lastY = y;
             }
