@@ -29,7 +29,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sound) {
             if (sound.paused) { // Only start if not already playing
                 sound.loop = shouldLoop;
-                sound.currentTime = 5.0; // Start at 5 seconds
+                // Different start times for different tools
+                if (soundName === 'typing') {
+                    sound.currentTime = 5.0; // Start typing sound at 5 seconds
+                } else if (soundName === 'pencil') {
+                    sound.currentTime = 5.0; // Start pencil sound at 5 seconds
+                } else {
+                    sound.currentTime = 0; // Start eraser from beginning
+                }
                 sound.play().catch(e => console.log('Sound play prevented:', e));
             }
         }
@@ -40,7 +47,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const sound = sounds[soundName];
         if (sound && !sound.paused) {
             sound.pause();
-            sound.currentTime = 5.0; // Reset to 5 seconds instead of 0
+            // Reset to appropriate position based on tool
+            if (soundName === 'typing' || soundName === 'pencil') {
+                sound.currentTime = 5.0;
+            } else {
+                sound.currentTime = 0;
+            }
             sound.loop = false;
         }
     }
