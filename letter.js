@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Drawing event handlers
     function drawStart(e) {
-        if (!['pencil', 'eraser', 'emoji', 'text'].includes(currentTool)) return;
+        if (!['pencil', 'eraser', 'emoji', 'text', 'crayon'].includes(currentTool)) return;
         
         const rect = canvas.getBoundingClientRect();
         const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
@@ -311,6 +311,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 playSound('pencil', true);
             } else if (currentTool === 'eraser') {
                 playSound('eraser', true);
+            } else if (currentTool === 'crayon') {
+                playSound('pencil', true); // Using pencil sound for crayon
             }
         }
     }
