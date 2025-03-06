@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (soundName === 'typing') {
                     sound.currentTime = 5.0; // Start typing sound at 5 seconds
                 } else if (soundName === 'pencil') {
-                    sound.currentTime = 5.0; // Start pencil sound at 5 seconds
+                    sound.currentTime = 1.0; // Start pencil sound at 1 second
                 } else {
                     sound.currentTime = 0; // Start eraser from beginning
                 }
@@ -48,8 +48,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sound && !sound.paused) {
             sound.pause();
             // Reset to appropriate position based on tool
-            if (soundName === 'typing' || soundName === 'pencil') {
+            if (soundName === 'typing') {
                 sound.currentTime = 5.0;
+            } else if (soundName === 'pencil') {
+                sound.currentTime = 1.0;
             } else {
                 sound.currentTime = 0;
             }
